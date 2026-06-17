@@ -1,0 +1,43 @@
+name: Test basic usage - install latest DNSControl
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          version: latest
+      - name: Assert dnscontrol-bin output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: dnscontrol-bin output is empty"
+            exit 1
+          fi
+          echo "PASS: dnscontrol-bin output is set to $ACTUAL"
+      - name: Assert binary exists and is executable
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "binary path: $BIN_PATH"
+          if [ ! -f "$BIN_PATH" ]; then
+            echo "FAIL: binary file does not exist at $BIN_PATH"
+            exit 1
+          fi
+          if [ ! -x "$BIN_PATH" ]; then
+            echo "FAIL: binary is not executable"
+            exit 1
+          fi
+          echo "PASS: binary exists and is executable"
+      - name: Assert dnscontrol is in PATH and runs
+        run: |
+          echo "Checking dnscontrol in PATH..."
+          which dnscontrol || { echo "FAIL: dnscontrol not found in PATH"; exit 1; }
+          echo "Running: dnscontrol version"
+          dnscontrol version
+          echo "PASS: dnscontrol version command succeeded"
