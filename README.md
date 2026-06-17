@@ -9,6 +9,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
 | v1.3.3 | [`v1.3.3`](https://github.com/chainguard-actions/gacts-install-dnscontrol/tree/v1.3.3) | [`3b213fd`](https://github.com/gacts/install-dnscontrol/commit/3b213fd9a07977f7063edbf1d4f93e453b720cad) |
+| v1.3.4 | [`v1.3.4`](https://github.com/chainguard-actions/gacts-install-dnscontrol/tree/v1.3.4) | [`5224e02`](https://github.com/gacts/install-dnscontrol/commit/5224e02f3886f6497a85fc395acafdf744490da1) |
 
 ## Privacy
 
