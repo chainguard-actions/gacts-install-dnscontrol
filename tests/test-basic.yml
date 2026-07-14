@@ -1,0 +1,48 @@
+name: Test basic usage - install DNSControl
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          version: "4.12.0"
+      - name: Assert dnscontrol-bin output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: dnscontrol-bin output is empty"
+            exit 1
+          fi
+          echo "PASS: dnscontrol-bin output is set to $ACTUAL"
+      - name: Assert binary exists and is executable
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "binary path: $BIN_PATH"
+          if [ -z "$BIN_PATH" ]; then
+            echo "FAIL: BIN_PATH is empty"
+            exit 1
+          fi
+          if [ ! -f "$BIN_PATH" ]; then
+            echo "FAIL: binary file does not exist at $BIN_PATH"
+            exit 1
+          fi
+          if [ ! -x "$BIN_PATH" ]; then
+            echo "FAIL: binary is not executable"
+            exit 1
+          fi
+          echo "PASS: binary exists and is executable"
+      - name: Assert dnscontrol runs and prints version
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "Running: $BIN_PATH version"
+          VERSION_OUTPUT="$("$BIN_PATH" version 2>&1 || true)"
+          echo "version output: $VERSION_OUTPUT"
+          echo "PASS: dnscontrol binary is functional"

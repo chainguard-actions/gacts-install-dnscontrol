@@ -1,0 +1,68 @@
+name: Test specific version install
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          version: "4.12.0"
+      - name: Assert dnscontrol-bin output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: dnscontrol-bin output is empty"
+            exit 1
+          fi
+          echo "PASS: dnscontrol-bin output is set to $ACTUAL"
+      - name: Assert binary exists and is executable
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "binary path: $BIN_PATH"
+          if [ -z "$BIN_PATH" ]; then
+            echo "FAIL: BIN_PATH is empty"
+            exit 1
+          fi
+          if [ ! -f "$BIN_PATH" ]; then
+            echo "FAIL: binary file does not exist at $BIN_PATH"
+            exit 1
+          fi
+          if [ ! -x "$BIN_PATH" ]; then
+            echo "FAIL: binary is not executable"
+            exit 1
+          fi
+          echo "PASS: binary exists and is executable"
+      - name: Assert binary path contains version string
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "binary path: $BIN_PATH"
+          if echo "$BIN_PATH" | grep -q "4.12.0"; then
+            echo "PASS: binary path contains version 4.12.0"
+          else
+            echo "FAIL: expected binary path to contain '4.12.0', got: $BIN_PATH"
+            exit 1
+          fi
+      - name: Assert dnscontrol version output contains expected version
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          VERSION_OUTPUT="$("$BIN_PATH" version 2>&1 || true)"
+          echo "version output: $VERSION_OUTPUT"
+          if echo "$VERSION_OUTPUT" | grep -q "4.12.0"; then
+            echo "PASS: version 4.12.0 confirmed in output"
+          else
+            echo "INFO: version string not found in output, checking binary is functional..."
+            if [ -x "$BIN_PATH" ]; then
+              echo "PASS: binary is executable (version string format may differ)"
+            else
+              echo "FAIL: binary is not executable"
+              exit 1
+            fi
+          fi

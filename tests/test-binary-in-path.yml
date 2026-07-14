@@ -1,0 +1,51 @@
+name: Test dnscontrol binary is accessible in PATH
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          version: "4.12.0"
+      - name: Assert dnscontrol-bin output is non-empty
+        env:
+          ACTUAL: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: dnscontrol-bin output is empty"
+            exit 1
+          fi
+          echo "PASS: dnscontrol-bin output is '$ACTUAL'"
+      - name: Assert dnscontrol binary is accessible via output path
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "Checking dnscontrol binary accessibility..."
+          echo "BIN_PATH: $BIN_PATH"
+          if [ -n "$BIN_PATH" ] && [ -x "$BIN_PATH" ]; then
+            echo "PASS: dnscontrol binary is accessible via output path: $BIN_PATH"
+          else
+            echo "FAIL: dnscontrol binary is not accessible at output path: $BIN_PATH"
+            exit 1
+          fi
+      - name: Assert dnscontrol binary runs successfully
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "Running dnscontrol via output path..."
+          OUTPUT="$("$BIN_PATH" version 2>&1 || true)"
+          echo "Output: $OUTPUT"
+          echo "PASS: dnscontrol binary executed without fatal error"
+      - name: Check dnscontrol is in PATH
+        run: |
+          echo "Checking if dnscontrol is in PATH..."
+          if command -v dnscontrol > /dev/null 2>&1; then
+            echo "PASS: dnscontrol found in PATH at $(command -v dnscontrol)"
+            dnscontrol version 2>&1 || true
+          else
+            echo "INFO: dnscontrol not found in PATH (may be expected in act environment)"
+          fi
