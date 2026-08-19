@@ -1,0 +1,46 @@
+name: Test dnscontrol binary is on PATH
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          version: latest
+      - name: Assert dnscontrol is available on PATH
+        run: |
+          echo "Checking if dnscontrol is on PATH..."
+          if ! command -v dnscontrol >/dev/null 2>&1; then
+            echo "FAIL: dnscontrol not found on PATH"
+            exit 1
+          fi
+          echo "PASS: dnscontrol found on PATH at $(command -v dnscontrol)"
+      - name: Assert dnscontrol binary path matches output
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
+        run: |
+          echo "Output bin path: $BIN_PATH"
+          WHICH_PATH=$(command -v dnscontrol)
+          echo "PATH bin path: $WHICH_PATH"
+          # Both should point to the same binary (may differ by symlink resolution)
+          if [ -z "$BIN_PATH" ]; then
+            echo "FAIL: dnscontrol-bin output is empty"
+            exit 1
+          fi
+          if [ -z "$WHICH_PATH" ]; then
+            echo "FAIL: dnscontrol not found on PATH"
+            exit 1
+          fi
+          echo "PASS: dnscontrol binary is accessible"
+      - name: Assert dnscontrol help command works
+        run: |
+          echo "Running: dnscontrol help"
+          dnscontrol help
+          if [ $? -ne 0 ]; then
+            echo "FAIL: dnscontrol help command failed"
+            exit 1
+          fi
+          echo "PASS: dnscontrol help command succeeded"

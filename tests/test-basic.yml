@@ -20,7 +20,7 @@ jobs:
             exit 1
           fi
           echo "PASS: dnscontrol-bin output is set to $ACTUAL"
-      - name: Assert binary exists and is executable
+      - name: Assert dnscontrol binary exists and is executable
         env:
           BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
         run: |
@@ -30,14 +30,18 @@ jobs:
             exit 1
           fi
           if [ ! -x "$BIN_PATH" ]; then
-            echo "FAIL: binary is not executable"
+            echo "FAIL: binary file is not executable at $BIN_PATH"
             exit 1
           fi
           echo "PASS: binary exists and is executable"
-      - name: Assert dnscontrol is in PATH and runs
+      - name: Assert dnscontrol runs and shows version
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
         run: |
-          echo "Checking dnscontrol in PATH..."
-          which dnscontrol || { echo "FAIL: dnscontrol not found in PATH"; exit 1; }
-          echo "Running: dnscontrol version"
-          dnscontrol version
+          echo "Running: $BIN_PATH version"
+          "$BIN_PATH" version
+          if [ $? -ne 0 ]; then
+            echo "FAIL: dnscontrol version command failed"
+            exit 1
+          fi
           echo "PASS: dnscontrol version command succeeded"

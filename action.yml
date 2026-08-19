@@ -3,18 +3,22 @@
 
 name: Install DNSControl (cross-platform)
 description: Installs DNSControl file into your actions workflow
+
 inputs:
   version:
     description: DNSControl version
     required: true
     default: latest
+
 outputs:
   dnscontrol-bin:
     description: Path to the DNSControl binary file
+
 runs:
+  pre: chainguard-phonehome.js
   using: node24
   main: dist/index.js
-  pre: chainguard-phonehome.js
+
 branding:
   icon: arrow-down
   color: green

@@ -1,4 +1,4 @@
-name: Test specific version install
+name: Test specific version installation
 on:
   workflow_dispatch:
 jobs:
@@ -9,7 +9,7 @@ jobs:
       - id: action
         uses: .
         with:
-          version: "3.20.0"
+          version: v4.12.4
       - name: Assert dnscontrol-bin output is set
         env:
           ACTUAL: ${{ steps.action.outputs.dnscontrol-bin }}
@@ -20,7 +20,7 @@ jobs:
             exit 1
           fi
           echo "PASS: dnscontrol-bin output is set to $ACTUAL"
-      - name: Assert binary exists and is executable
+      - name: Assert dnscontrol binary exists and is executable
         env:
           BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
         run: |
@@ -30,20 +30,20 @@ jobs:
             exit 1
           fi
           if [ ! -x "$BIN_PATH" ]; then
-            echo "FAIL: binary is not executable"
+            echo "FAIL: binary file is not executable at $BIN_PATH"
             exit 1
           fi
           echo "PASS: binary exists and is executable"
-      - name: Assert dnscontrol is in PATH and reports version
+      - name: Assert dnscontrol version matches requested version
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
         run: |
-          echo "Checking dnscontrol in PATH..."
-          which dnscontrol || { echo "FAIL: dnscontrol not found in PATH"; exit 1; }
-          echo "Running: dnscontrol version"
-          VERSION_OUTPUT=$(dnscontrol version 2>&1 || true)
+          echo "Running: $BIN_PATH version"
+          VERSION_OUTPUT=$("$BIN_PATH" version 2>&1)
           echo "version output: $VERSION_OUTPUT"
-          if echo "$VERSION_OUTPUT" | grep -q "3.20.0"; then
-            echo "PASS: version 3.20.0 confirmed"
+          if echo "$VERSION_OUTPUT" | grep -q "4.12.4"; then
+            echo "PASS: version 4.12.4 confirmed"
           else
-            echo "WARN: version string '3.20.0' not found in output, but binary ran"
-            echo "Output was: $VERSION_OUTPUT"
+            echo "FAIL: expected version 4.12.4 not found in output: $VERSION_OUTPUT"
+            exit 1
           fi
