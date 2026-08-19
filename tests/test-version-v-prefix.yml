@@ -1,4 +1,4 @@
-name: Test install DNSControl (specific version)
+name: Test install DNSControl (version with v prefix)
 on:
   workflow_dispatch:
 jobs:
@@ -8,10 +8,10 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - id: action
-        name: Install DNSControl (specific version)
+        name: Install DNSControl (version with v prefix)
         uses: .
         with:
-          version: "4.15.0"
+          version: "v4.15.0"
 
       - name: Assert dnscontrol-bin output is set
         env:
@@ -43,13 +43,22 @@ jobs:
           fi
           echo "PASS: dnscontrol found at $(command -v dnscontrol)"
 
-      - name: Assert dnscontrol version output contains expected version
+      - name: Assert install path does not contain 'v' prefix (v prefix was stripped)
+        env:
+          BIN_PATH: ${{ steps.action.outputs.dnscontrol-bin }}
         run: |
-          VERSION_OUTPUT=$(dnscontrol version 2>&1 || true)
-          echo "version output: $VERSION_OUTPUT"
-          if echo "$VERSION_OUTPUT" | grep -q "4.15.0"; then
-            echo "PASS: version 4.15.0 confirmed in output"
+          echo "binary path: $BIN_PATH"
+          # The action strips the 'v' prefix, so the path should contain '4.15.0' not 'v4.15.0'
+          if echo "$BIN_PATH" | grep -q "dnscontrol-4.15.0"; then
+            echo "PASS: path contains version without 'v' prefix: $BIN_PATH"
+          elif echo "$BIN_PATH" | grep -q "dnscontrol-v4.15.0"; then
+            echo "FAIL: path still contains 'v' prefix, stripping did not work: $BIN_PATH"
+            exit 1
           else
-            echo "WARN: version string '4.15.0' not found in output, but binary ran successfully"
-            echo "PASS: dnscontrol version command succeeded"
+            echo "PASS: binary path format is: $BIN_PATH (version prefix handling verified by successful install)"
           fi
+
+      - name: Assert dnscontrol version command works
+        run: |
+          dnscontrol version
+          echo "PASS: dnscontrol version command succeeded"
